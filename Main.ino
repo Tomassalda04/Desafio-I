@@ -9,6 +9,8 @@ int estadoDetener = LOW;
 long tiempoLecturaIniciar = 0;
 long tiempoLecturaDetener = 0;
 long tiempoDelay = 50;  // Tiempo de debounce
+int capacidad=50;
+int *datos= new int [capacidad];
 
 int analogReadAverage(int pin, int samples) { 
   long sum = 0;
