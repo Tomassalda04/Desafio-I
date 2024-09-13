@@ -12,7 +12,6 @@ long tiempoDelay = 50;  // Tiempo de debounce
 int capacidad=1;
 int numdatos=0;
 int *datos= new int [capacidad];
-int tamano;
 int amplitud;
 bool amplitudCalculada = false;
 
@@ -141,9 +140,9 @@ void loop() {
   datos = funcionamientoBotones();// Llamar a la función para manejar los botones y la recolección de dato
   
   //PARA CALCULAR LA AMPLITUD
-  if (!amplitudCalculada && !recibiendo && numdatos > 0) {
-    tamano = numdatos; // Ajustar el tamaño con el número actual de datos
-    amplitud = funAmplitud(datos, tamano);
+  if (!amplitudCalculada && !recibiendo && numdatos > 0) { // Ajustar el tamaño con el número actual de datos
+    amplitud = funAmplitud(datos, numdatos);
+    //Serial.print(numdatos/10);
     Serial.println();
     Serial.print("La amplitud calculada es: ");
     Serial.print(amplitud);
@@ -151,4 +150,3 @@ void loop() {
     amplitudCalculada = true;
   }
 }
-
