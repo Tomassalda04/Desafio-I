@@ -12,8 +12,9 @@ long tiempoDelay = 50;  // Tiempo de debounce
 int capacidad=1;
 int numdatos=0;
 int *datos= new int [capacidad];
-int amplitud;
+int amplitud = 0;
 bool amplitudCalculada = false;
+
 
 
 
@@ -47,8 +48,8 @@ void recodatos(int *&datos, int dato, int posicion, int capacidad){
   }
 }
 
-
 int* funcionamientoBotones() {
+
   int lecturaIniciar = digitalRead(botonIniciarPin);
   int lecturaDetener = digitalRead(botonDetenerPin);
 
@@ -99,7 +100,9 @@ int* funcionamientoBotones() {
   if (recibiendo) {
     float valorSenal = analogRead(analogPin);  // Leer el valor de la señal
     //datos = recodatos(datos,valorSenal,numdatos,capacidad);
+
     //Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
+
     datos[numdatos]=valorSenal;
     numdatos+=1;
     if(numdatos==capacidad){
