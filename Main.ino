@@ -1,6 +1,9 @@
+#import <LiquidCrystal.h>
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
 int analogPin = A0;  // Pin para el generador de funciones
-int botonIniciarPin = 2;  // Botón para iniciar la recolección
-int botonDetenerPin = 4;  // Botón para detener la recolección
+int botonIniciarPin = 7;  // Botón para iniciar la recolección
+int botonDetenerPin = 6;  // Botón para detener la recolección
 bool recibiendo = false;  // Estado de la recolección de datos
 int ultimoEstadoIniciar = LOW;
 int ultimoEstadoDetener = LOW;
@@ -12,43 +15,81 @@ long tiempoDelay = 50;  // Tiempo de debounce
 int capacidad=1;
 int numdatos=0;
 int *datos= new int [capacidad];
-int amplitud;
+int amplitud = 0;
 bool amplitudCalculada = false;
-
-
-
-int analogReadAverage(int pin, int samples) { 
-  long sum = 0;
-  for (int i = 0; i < samples; i++) {
-    sum += analogRead(pin);
-  } 
-  return sum / samples;
-}
+int frecuencia=0;
+int num=0;
+int num3=0;
 
 void setup() {
   pinMode(botonIniciarPin, INPUT);
   pinMode(botonDetenerPin, INPUT);
   Serial.begin(9600);  // Iniciar el monitor serial
+  lcd.begin(16, 2);
+  lcd.setCursor(0,0);
+  lcd.print("Presione boton");
+  lcd.setCursor(0,1);
+  lcd.print("Iz para comenzar");
 }
 
-void recodatos(int *&datos, int dato, int posicion, int capacidad){
-  datos[posicion]=dato;
-  //posicion+=1;
-  if(posicion==capacidad){
-  	int nuevacap= capacidad+1;
-    int *copydatos= new int[nuevacap];
-    for(int i=0; i<capacidad;i++){
-      copydatos[i]= datos[i];
+
+int funFrecuencia(int *datos,int tamano){
+  float tiempoT= tamano/10;
+  int picos=0;
+  int mayor=0;
+  int menor=0;
+  int actual=0;
+  float frecuencia=0;
+  int aux=0;
+  for(int i=0;i<tamano;i++){
+    if(aux==0){
+      actual=datos[i];
+      if(actual>mayor){
+        mayor=actual;
+      }
+      if(actual<mayor && actual>0){
+        picos++;
+        aux=1; 
+        menor=mayor;
+        mayor=0;
+      }
     }
-  delete[] datos;
-  datos=copydatos;
-  capacidad=nuevacap;
-  posicion+=1;
+    else{
+      actual=datos[i];
+      if(actual<menor){
+        menor=actual;
+      }
+      if(actual>menor){
+        aux=0;
+      }
+    }
+  }
+
+  frecuencia=((picos/tiempoT)*100);
+  Serial.println();
+  Serial.print("frecuencia ");
+  Serial.print(frecuencia);
+  return frecuencia;
+
+}
+
+void recodatos(int *&arr, int dato, int &tamano, int &capacidad){
+  arr[tamano]=dato;
+  tamano+=1;
+  if(tamano==capacidad){//En este IF se crea nueva memoria dinamica para crear nuevos espacios
+    int nuevacap= capacidad+1;
+    int *copydatos= new int[nuevacap];
+    for(int i=0; i<tamano;i++){
+      copydatos[i]= arr[i];
+    }
+    delete[] datos;//Se libera la memoria de datos para que no haya fuga de memoria 
+    arr=copydatos;
+    capacidad=nuevacap;
   }
 }
 
-
 int* funcionamientoBotones() {
+
   int lecturaIniciar = digitalRead(botonIniciarPin);
   int lecturaDetener = digitalRead(botonDetenerPin);
 
@@ -60,11 +101,18 @@ int* funcionamientoBotones() {
   if ((millis() - tiempoLecturaIniciar) > tiempoDelay) {
     if (lecturaIniciar != estadoIniciar) {
       estadoIniciar = lecturaIniciar;
+      
+      if(estadoIniciar == LOW){
+        lcd.setCursor(0,0);
+        lcd.print("Presione boton");
+        lcd.setCursor(0, 1);
+        lcd.print("Der para acabar");
+      }
 
       if (estadoIniciar == HIGH) {
+        lcd.clear();
         recibiendo = true;  // Iniciar la recolección de datos
-       
-        Serial.println("Recolección de datos iniciada...");
+        Serial.println("Recoleccion de datos iniciada...");
         delay(50);  // Pequeño delay para evitar rebotes
       }
     }
@@ -87,6 +135,10 @@ int* funcionamientoBotones() {
           Serial.print(datos[i]);
           Serial.print(" ");
         }
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Amplitud: ");
+        lcd.print(amplitud);
         delete[] datos;
         delay(50);  // Pequeño delay para evitar rebotes
       }
@@ -97,21 +149,10 @@ int* funcionamientoBotones() {
 
   // Si recibiendo es true, leer e imprimir la señal del generador
   if (recibiendo) {
-    float valorSenal = analogRead(analogPin);  // Leer el valor de la señal
-    //datos = recodatos(datos,valorSenal,numdatos,capacidad);
-    //Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
-    datos[numdatos]=valorSenal;
-    numdatos+=1;
-    if(numdatos==capacidad){
-      int nuevacap= capacidad+1;
-      int *copydatos= new int[nuevacap];
-      for(int i=0; i<capacidad;i++){
-        copydatos[i]= datos[i];
-      }
-      delete[] datos;
-      datos=copydatos;
-      capacidad=nuevacap;
-    }
+    int valorSenal = analogRead(analogPin);  // Leer el valor de la señal
+    recodatos(datos,valorSenal,numdatos,capacidad);
+
+    Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
     
     delay(100);  // Ajustar la frecuencia de lectura según sea necesario
   }
@@ -139,8 +180,9 @@ int funAmplitud(int* arr, int tamano) {
 void loop() {
   datos = funcionamientoBotones();// Llamar a la función para manejar los botones y la recolección de dato
   
-  //PARA CALCULAR LA AMPLITUD
-  if (!amplitudCalculada && !recibiendo && numdatos > 0) { // Ajustar el tamaño con el número actual de datos
+
+  //PARA CALCULAR LA AMPLITUD; FRECUENCIA
+  if (!amplitudCalculada && !recibiendo && numdatos > 0){ // Ajustar el tamaño con el número actual de datos
     amplitud = funAmplitud(datos, numdatos);
     //Serial.print(numdatos/10);
     Serial.println();
@@ -148,5 +190,16 @@ void loop() {
     Serial.print(amplitud);
     Serial.print(" V");
     amplitudCalculada = true;
+    frecuencia=funFrecuencia(datos,numdatos);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Amplitud: ");
+    lcd.print(amplitud);
+    lcd.print("V");
+    lcd.setCursor(0,1);
+    lcd.print("Frecuencia: ");
+    lcd.print(frecuencia);
+    lcd.print("Hz");
+    
   }
 }
