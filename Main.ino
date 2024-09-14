@@ -18,8 +18,7 @@ int *datos= new int [capacidad];
 int amplitud = 0;
 bool amplitudCalculada = false;
 int frecuencia=0;
-int num=0;
-int num3=0;
+
 
 void setup() {
   pinMode(botonIniciarPin, INPUT);
@@ -68,7 +67,11 @@ int funFrecuencia(int *datos,int tamano){
   frecuencia=((picos/tiempoT)*100);
   Serial.println();
   Serial.print("frecuencia ");
-  Serial.print(frecuencia);
+  Serial.println(frecuencia);
+  Serial.print("tamano ");
+  Serial.println(tamano);
+  Serial.print("picos ");
+  Serial.print(picos);
   return frecuencia;
 
 }
@@ -131,10 +134,10 @@ int* funcionamientoBotones() {
       if (estadoDetener == HIGH) {
         recibiendo = false;  // Detener la recolección de datos
         Serial.println("Recoleccion de datos detenida...");
-        for(int i=0;i<capacidad-1;i+=1){
+        /*for(int i=0;i<capacidad-1;i+=1){
           Serial.print(datos[i]);
-          Serial.print(" ");
-        }
+          Serial.print(", ");
+        }*/
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Amplitud: ");
@@ -151,9 +154,7 @@ int* funcionamientoBotones() {
   if (recibiendo) {
     int valorSenal = analogRead(analogPin);  // Leer el valor de la señal
     recodatos(datos,valorSenal,numdatos,capacidad);
-
     Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
-    
     delay(100);  // Ajustar la frecuencia de lectura según sea necesario
   }
   return datos;
