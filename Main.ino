@@ -18,6 +18,19 @@ int frecuencia=0;
 int num=0;
 int num3=0;
 
+
+
+
+
+int analogReadAverage(int pin, int samples) { 
+  long sum = 0;
+  for (int i = 0; i < samples; i++) {
+    sum += analogRead(pin);
+  } 
+  return sum / samples;
+}
+
+
 void setup() {
   pinMode(botonIniciarPin, INPUT);
   pinMode(botonDetenerPin, INPUT);
@@ -147,8 +160,14 @@ int* funcionamientoBotones() {
   if (recibiendo) {
     int valorSenal = analogRead(analogPin);  // Leer el valor de la señal
     //datos = recodatos(datos,valorSenal,numdatos,capacidad);
+
     Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
     
+
+
+    //Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
+
+
     datos[numdatos]=valorSenal;
     numdatos+=1;
     if(numdatos==capacidad){
@@ -188,8 +207,13 @@ int funAmplitud(int* arr, int tamano) {
 void loop() {
   datos = funcionamientoBotones();// Llamar a la función para manejar los botones y la recolección de dato
   
+
   //PARA CALCULAR LA AMPLITUD; FRECUENCIA
   if (!amplitudCalculada && !recibiendo && numdatos > 0){ // Ajustar el tamaño con el número actual de datos
+
+  //PARA CALCULAR LA AMPLITUD
+  if (!amplitudCalculada && !recibiendo && numdatos > 0) { // Ajustar el tamaño con el número actual de datos
+
     amplitud = funAmplitud(datos, numdatos);
     //Serial.print(numdatos/10);
     Serial.println();
@@ -197,6 +221,7 @@ void loop() {
     Serial.print(amplitud);
     Serial.print(" V");
     amplitudCalculada = true;
+
     frecuencia=funFrecuencia(datos,numdatos);
     
     
