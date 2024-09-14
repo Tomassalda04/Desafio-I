@@ -12,6 +12,10 @@ long tiempoDelay = 50;  // Tiempo de debounce
 int capacidad=1;
 int numdatos=0;
 int *datos= new int [capacidad];
+int amplitud = 0;
+bool amplitudCalculada = false;
+
+
 
 
 int analogReadAverage(int pin, int samples) { 
@@ -44,8 +48,8 @@ void recodatos(int *&datos, int dato, int posicion, int capacidad){
   }
 }
 
+int* funcionamientoBotones() {
 
-void funcionamientoBotones() {
   int lecturaIniciar = digitalRead(botonIniciarPin);
   int lecturaDetener = digitalRead(botonDetenerPin);
 
@@ -96,7 +100,9 @@ void funcionamientoBotones() {
   if (recibiendo) {
     float valorSenal = analogRead(analogPin);  // Leer el valor de la señal
     //datos = recodatos(datos,valorSenal,numdatos,capacidad);
-    Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
+
+    //Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
+
     datos[numdatos]=valorSenal;
     numdatos+=1;
     if(numdatos==capacidad){
@@ -112,13 +118,38 @@ void funcionamientoBotones() {
     
     delay(100);  // Ajustar la frecuencia de lectura según sea necesario
   }
+  return datos;
 }
+
+int funAmplitud(int* arr, int tamano) {
+  int mayor = arr[0];
+  int menor = arr[0];
+
+  // Recorremos el arreglo para encontrar el mayor y menor
+  for (int i = 0; i < tamano; i++) {
+    if (arr[i] > mayor) {
+      mayor = arr[i];
+    }
+    if (arr[i] < menor) {
+      menor = arr[i];
+    }
+  }
+  // Retorna la suma de mayor y menor dividida entre 2
+  return ((mayor-menor)/2)/100;
+}
+
 
 void loop() {
-  funcionamientoBotones();  // Llamar a la función para manejar los botones y la recolección de datos
+  datos = funcionamientoBotones();// Llamar a la función para manejar los botones y la recolección de dato
+  
+  //PARA CALCULAR LA AMPLITUD
+  if (!amplitudCalculada && !recibiendo && numdatos > 0) { // Ajustar el tamaño con el número actual de datos
+    amplitud = funAmplitud(datos, numdatos);
+    //Serial.print(numdatos/10);
+    Serial.println();
+    Serial.print("La amplitud calculada es: ");
+    Serial.print(amplitud);
+    Serial.print(" V");
+    amplitudCalculada = true;
+  }
 }
-
-
-
-
-
