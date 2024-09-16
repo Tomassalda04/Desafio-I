@@ -15,9 +15,13 @@ long tiempoDelay = 50;  // Tiempo de debounce
 int capacidad=1;
 int numdatos=0;
 int *datos= new int [capacidad];
+int *pendiente= new int [capacidad];
+int numdatosM=10;
 int amplitud = 0;
 bool amplitudCalculada = false;
 int frecuencia=0;
+int valle=0;
+
 
 
 void setup() {
@@ -30,7 +34,6 @@ void setup() {
   lcd.setCursor(0,1);
   lcd.print("Iz para comenzar");
 }
-
 
 int funFrecuencia(int *datos,int tamano){
   float tiempoT= tamano/10;
@@ -90,6 +93,7 @@ void recodatos(int *&arr, int dato, int &tamano, int &capacidad){
     capacidad=nuevacap;
   }
 }
+
 
 int* funcionamientoBotones() {
 
@@ -177,6 +181,144 @@ int funAmplitud(int* arr, int tamano) {
   return ((mayor-menor)/2)/100;
 }
 
+int funFrecuencia(int *array,int tamano){
+  float tiempoT=0;
+  int posP2=0;
+  int posValle=0;
+  int picos=0;
+  float frecuencia=0;
+  for(int i=0; i<tamano;i++){
+    if(array[i]>=array[i-1] && array[i]>array[i+1]){
+      picos++;
+      if(picos ==2){
+        posP2 = i;
+      }
+    }
+    if(posP2!=0){
+      if(array[i]<=array[i-1] && array[i]<array[i+1]){
+        posValle=i;;
+        break;
+      }
+    }
+  }
+  tiempoT=((posValle-posP2)/10)*2;
+  
+  frecuencia=((1/tiempoT)*100);
+  /*Serial.println();
+  /Serial.print("frecuencia ");
+  Serial.println(frecuencia);
+  Serial.print("tamano ");
+  Serial.println(tamano);
+  Serial.print("picos ");
+  Serial.print(picos);*/
+  return frecuencia;
+
+}
+
+void funPendiente(int *array, int*array2, int tamano){
+    float m=0;
+    int picos=0;
+    int posP2= 0;
+    int posM = 0;
+    int posValle=0;
+    for(int i=0; i<tamano;i++){
+        if(array[i]>=array[i-1] && array[i]>array[i+1]){
+            picos++;
+            if(picos ==2){
+                posP2 = i;
+            }
+        }
+        if(posP2!=0){
+            if(array[i]<=array[i-1] && array[i]<array[i+1]){
+                posValle=i;;
+                break;
+            }
+        }
+    }
+    for(int i=posValle;i>posP2; i--){
+        m=(array[i]-array[i-1])/0.1;
+        array2[posM]= m;
+        posM++;
+        if(posM==10){
+            break;
+        }
+    }
+}
+
+bool esCuadrada(int* datos, int tamano) {
+    int nivelAlto = datos[0];
+    int nivelBajo = datos[0];
+
+    for (int i = 1; i < tamano; i++) {
+        if (datos[i] > nivelAlto) {
+            nivelAlto = datos[i];
+        }
+        if (datos[i] < nivelBajo) {
+            nivelBajo = datos[i];
+        }
+    }
+    for (int i = 1; i < tamano; i++) {
+        if (datos[i] != nivelAlto && datos[i] != nivelBajo) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool seno(int *arrayM,int capacidadM){
+    int cont=0;
+    for(int i=0; i<capacidadM;i++){
+        if(arrayM[i]>=arrayM[i+1]){
+            cont++;
+        }
+    }
+    if(cont>=7){
+        return true;
+    }
+    else if(cont<7){
+        return false;
+    }
+}
+
+bool triangular(int *arrayM, int capacidadM){
+    int cont=0;
+    for(int i=0; i<capacidadM;i++){
+        if(arrayM[i]>=arrayM[i+1]){
+            cont++;
+        }
+    }
+    Serial.println();
+    Serial.print("CONT ");
+    Serial.println(cont);
+    if(cont<7){
+        return true;
+    }
+    else if(cont >=8){
+        return false;
+    }
+}
+
+int determinarFuncion(int* array,int* arrayM, int tamano, int tamanoM) {
+  int tipoFuncion;
+  if (esCuadrada(datos, tamano)) {
+    Serial.println("La funcion es cuadrada.");
+    tipoFuncion =1;
+    } 
+  else if (seno(arrayM, tamanoM)) {
+    Serial.println("La funcion es senoidal.");
+    tipoFuncion = 2;
+
+    }
+  else if(triangular(arrayM, tamanoM)){
+    Serial.println("La funcion es triangular.");
+    tipoFuncion = 3;
+  }
+  else {
+    Serial.println("La funcion No es de ninngun tipo.");
+    tipoFuncion = -1;
+    }
+  return tipoFuncion;
+}
 
 void loop() {
   datos = funcionamientoBotones();// Llamar a la función para manejar los botones y la recolección de dato
@@ -189,9 +331,19 @@ void loop() {
     Serial.println();
     Serial.print("La amplitud calculada es: ");
     Serial.print(amplitud);
-    Serial.print(" V");
+    Serial.println(" V");
     amplitudCalculada = true;
     frecuencia=funFrecuencia(datos,numdatos);
+    Serial.print("La frecuencia calculada es: ");
+    Serial.print(frecuencia);
+    Serial.println(" Hz");
+    funPendiente(datos,pendiente,numdatos);
+    
+    /*for(int i=0;i<10;i++){
+      Serial.print(pendiente[i]);
+      Serial.print(" ");
+    }*/
+    determinarFuncion(datos,pendiente,numdatos,numdatosM);
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Amplitud: ");
