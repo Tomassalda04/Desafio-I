@@ -35,50 +35,6 @@ void setup() {
   lcd.print("Iz para comenzar");
 }
 
-int funFrecuencia(int *datos,int tamano){
-  float tiempoT= tamano/10;
-  int picos=0;
-  int mayor=0;
-  int menor=0;
-  int actual=0;
-  float frecuencia=0;
-  int aux=0;
-  for(int i=0;i<tamano;i++){
-    if(aux==0){
-      actual=datos[i];
-      if(actual>mayor){
-        mayor=actual;
-      }
-      if(actual<mayor && actual>0){
-        picos++;
-        aux=1; 
-        menor=mayor;
-        mayor=0;
-      }
-    }
-    else{
-      actual=datos[i];
-      if(actual<menor){
-        menor=actual;
-      }
-      if(actual>menor){
-        aux=0;
-      }
-    }
-  }
-
-  frecuencia=((picos/tiempoT)*100);
-  Serial.println();
-  Serial.print("frecuencia ");
-  Serial.println(frecuencia);
-  Serial.print("tamano ");
-  Serial.println(tamano);
-  Serial.print("picos ");
-  Serial.print(picos);
-  return frecuencia;
-
-}
-
 void recodatos(int *&arr, int dato, int &tamano, int &capacidad){
   arr[tamano]=dato;
   tamano+=1;
