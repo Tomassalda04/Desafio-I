@@ -153,15 +153,6 @@ int funFrecuencia(int *array,int tamano){
   tiempoT=((posValle-posP2)/10)*2;
   
   frecuencia=((1/tiempoT)*100);
-  /*Serial.println();
-  /Serial.print("frecuencia ");
-  Serial.println(frecuencia);
-  Serial.print("tamano ");
-  Serial.println(tamano);
-  Serial.print("picos ");
-  Serial.print(picos);*/
-  Serial.print("tamano ");
-  Serial.println(tamano);
   return frecuencia;
 
 }
