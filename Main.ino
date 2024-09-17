@@ -17,11 +17,12 @@ int numdatos=0;
 int *datos= new int [capacidad];
 int *pendiente= new int [capacidad];
 int numdatosM=10;
-int amplitud = 0;
+float amplitud = 0;
 bool amplitudCalculada = false;
 int frecuencia=0;
 int valle=0;
-
+int tipoFuncion=0;
+int reinicio = 0;
 
 
 void setup() {
@@ -43,6 +44,7 @@ void recodatos(int *&arr, int dato, int &tamano, int &capacidad){
     int *copydatos= new int[nuevacap];
     for(int i=0; i<tamano;i++){
       copydatos[i]= arr[i];
+      
     }
     delete[] datos;//Se libera la memoria de datos para que no haya fuga de memoria 
     arr=copydatos;
@@ -52,7 +54,6 @@ void recodatos(int *&arr, int dato, int &tamano, int &capacidad){
 
 
 int* funcionamientoBotones() {
-
   int lecturaIniciar = digitalRead(botonIniciarPin);
   int lecturaDetener = digitalRead(botonDetenerPin);
 
@@ -94,15 +95,6 @@ int* funcionamientoBotones() {
       if (estadoDetener == HIGH) {
         recibiendo = false;  // Detener la recolección de datos
         Serial.println("Recoleccion de datos detenida...");
-        /*for(int i=0;i<capacidad-1;i+=1){
-          Serial.print(datos[i]);
-          Serial.print(", ");
-        }*/
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Amplitud: ");
-        lcd.print(amplitud);
-        delete[] datos;
         delay(50);  // Pequeño delay para evitar rebotes
       }
     }
@@ -115,15 +107,15 @@ int* funcionamientoBotones() {
     int valorSenal = analogRead(analogPin);  // Leer el valor de la señal
     recodatos(datos,valorSenal,numdatos,capacidad);
     Serial.println(valorSenal); // Imprimir el valor de la señal en el monitor serial
-    delay(100);  // Ajustar la frecuencia de lectura según sea necesario
+    delay(100); // Ajustar la frecuencia de lectura según sea necesario
   }
   return datos;
 }
 
-int funAmplitud(int* arr, int tamano) {
+float funAmplitud(int* arr, int tamano) {
   int mayor = arr[0];
   int menor = arr[0];
-
+  float voltios=0;
   // Recorremos el arreglo para encontrar el mayor y menor
   for (int i = 0; i < tamano; i++) {
     if (arr[i] > mayor) {
@@ -133,8 +125,9 @@ int funAmplitud(int* arr, int tamano) {
       menor = arr[i];
     }
   }
-  // Retorna la suma de mayor y menor dividida entre 2
-  return ((mayor-menor)/2)/100;
+  amplitud=((mayor-menor)/2);
+  voltios=amplitud/100;
+  return voltios;
 }
 
 int funFrecuencia(int *array,int tamano){
@@ -167,6 +160,8 @@ int funFrecuencia(int *array,int tamano){
   Serial.println(tamano);
   Serial.print("picos ");
   Serial.print(picos);*/
+  Serial.print("tamano ");
+  Serial.println(tamano);
   return frecuencia;
 
 }
@@ -294,12 +289,7 @@ void loop() {
     Serial.print(frecuencia);
     Serial.println(" Hz");
     funPendiente(datos,pendiente,numdatos);
-    
-    /*for(int i=0;i<10;i++){
-      Serial.print(pendiente[i]);
-      Serial.print(" ");
-    }*/
-    determinarFuncion(datos,pendiente,numdatos,numdatosM);
+    tipoFuncion=determinarFuncion(datos,pendiente,numdatos,numdatosM);
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Amplitud: ");
@@ -309,6 +299,60 @@ void loop() {
     lcd.print("Frecuencia: ");
     lcd.print(frecuencia);
     lcd.print("Hz");
-    
-  }
+    delay(3500);
+    if(tipoFuncion==1){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("    Funcion");
+      lcd.setCursor(0,1);
+      lcd.print("    Cuadrada");
+      delay(3500);
+      lcd.clear();
+      reinicio = 1;
+      if (reinicio ==1){
+      	estadoIniciar = HIGH;
+      }
+    }
+    else if(tipoFuncion==2){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("    Funcion");
+      lcd.setCursor(0,1);
+      lcd.print("    Senoidal");
+      delay(3500);
+      lcd.clear();
+      reinicio = 1;
+      if (reinicio ==1){
+      	estadoIniciar = HIGH;
+        estadoDetener = LOW;
+      }
+    }
+    else if(tipoFuncion==3){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("    Funcion");
+      lcd.setCursor(0,1);
+      lcd.print("   Triangular");
+      delay(3500);
+      lcd.clear();
+      reinicio = 1;
+      if (reinicio ==1){
+      	estadoIniciar = HIGH;    
+      }
+    }
+    delete[] datos;
+    delete[] pendiente;
+    numdatos = 0;  // Reiniciar el contador de datos
+    capacidad = 1;  // Reiniciar la capacidad del arreglo
+
+    // Asignar nueva memoria para los datos
+    datos = new int[capacidad];
+    pendiente = new int[capacidad];
+
+    // Reiniciar automáticamente la recolección si el botón de detener no está presionado
+    if (estadoDetener == LOW) {
+      recibiendo = true;  // Reiniciar la recolección de datos
+      Serial.println("Recoleccion de datos reiniciada...");
+    }
+    }
 }
